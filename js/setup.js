@@ -1,6 +1,10 @@
 'use strict';
 
-var userDialog = document.querySelector('.setup');
+//
+// Открытие и закрытие окна выбора и настройки персонажа
+//
+
+var setup = document.querySelector('.setup');
 
 var setupOpen = document.querySelector('.setup-open');
 
@@ -8,25 +12,25 @@ var setupClose = document.querySelector('.setup-close');
 
 var setupUserName = document.querySelector('.setup-user-name');
 
+var openPopup = function(){
+  setup.classList.remove('hidden');
+  document.addEventListener('keydown', onPopupEscPress);
+};
+
+var closePopup = function(){
+  setup.classList.add('hidden');
+  document.removeEventListener('keydown', onPopupEscPress);
+};
+
 var onPopupEscPress = function(evt){
   if (evt.keyCode === 27) {
     closePopup();
   }
-}
-
-var openPopup = function(){
-  userDialog.classList.remove('hidden');
-  document.addEventListener('keydown', onPopupEscPress);
 };
 
 setupUserName.addEventListener('focus', function(){
   document.removeEventListener('keydown', onPopupEscPress);
 });
-
-var closePopup = function(){
-  userDialog.classList.add('hidden');
-  document.removeEventListener('keydown', onPopupEscPress);
-};
 
 setupOpen.addEventListener('click', function(){
   openPopup();
@@ -48,6 +52,10 @@ setupClose.addEventListener('keydown', function(evt){
   }
 });
 
+//
+// Задание цвета магу и произвольные 4 мага снизу
+//
+
 var similarListElement = document.querySelector('.setup-similar-list');
 
 var similarWizardTemplate = document.querySelector('#similar-wizard-template').content.querySelector('.setup-similar-item');
@@ -56,10 +64,6 @@ var similarWizardTemplate = document.querySelector('#similar-wizard-template').c
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
-
-//
-// Задание цвета магу и произвольные 4 мага снизу
-//
 
 var NAMES = ['Иван', 'Хуан Себастьян', 'Мария', 'Кристоф', 'Виктор', 'Юлия', 'Люпита', 'Вашингтон'];
 var SURNAMES = ['да Марья', 'Верон', 'Мирабелла', 'Вальц', 'Онопко', 'Топольницкая', 'Нионго', 'Ирвинг'];
@@ -88,11 +92,15 @@ var renderWizard = function(wizard){
 
 var fragment = document.createDocumentFragment();
 for (var i = 0; i < 4; i++) {
-  fragment.appendChild(renderWizard(wizards[i]));
-}
+  fragment.appendChild(renderWizard(wizards[i]))
+};
 similarListElement.appendChild(fragment);
 
-userDialog.querySelector('.setup-similar').classList.remove('hidden');
+setup.querySelector('.setup-similar').classList.remove('hidden');
+
+//
+// Кастомизация персонажа
+//
 
 var wizardCoat = document.querySelector('.setup-wizard .wizard-coat');
 
@@ -121,3 +129,59 @@ wizardFireball.addEventListener('click', function(){
   wizardFireball.style.backgroundColor = wizardFireballColor;
   document.querySelector('input[name="fireball-color"]').value = wizardFireballColor;
 });
+
+//
+// Перетаскивание окна
+//
+(function(){
+
+  var setupDialogElement = document.querySelector('.setup');
+  var dialogHandler = setupDialogElement.querySelector('.upload');
+
+  dialogHandler.addEventListener('mousedown', function(evt){
+    evt.preventDefault();
+
+    var startCoords = {
+      x: evt.clientX,
+      y: evt.clientY
+    };
+
+    var dragged = false;
+
+    var onMouseMove = function(moveEvt){
+      moveEvt.preventDefault();
+      dragged = true;
+
+      var shift = {
+        x: startCoords.x - moveEvt.clientX,
+        y: startCoords.y - moveEvt.clientY
+      };
+
+      startCoords = {
+        x: moveEvt.clientX,
+        y: moveEvt.clientY
+      };
+
+      setupDialogElement.style.top = (setupDialogElement.offsetTop - shift.y) + 'px';
+      setupDialogElement.style.left = (setupDialogElement.offsetLeft - shift.x) + 'px';
+    };
+
+    var onMouseUp = function(upEvt){
+      upEvt.preventDefault();
+
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+
+      if(dragged){
+        var onClickPreventDefault = function(evt){
+          evt.preventDefault();
+          dialogHandler.removeEventListener('click', onClickPreventDefault)
+        };
+        dialogHandler.addEventListener('click', onClickPreventDefault);
+      }
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+})();
