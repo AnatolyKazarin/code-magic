@@ -53,54 +53,69 @@ setupClose.addEventListener('keydown', function(evt){
 });
 
 //
-// Задание цвета магу и произвольные 4 мага снизу
+// Запрос на сервер и получение созданных игроков
 //
 
-var similarListElement = document.querySelector('.setup-similar-list');
+(function () {
+  var similarListElement = document.querySelector('.setup-similar-list');
 
-var similarWizardTemplate = document.querySelector('#similar-wizard-template').content.querySelector('.setup-similar-item');
+  var similarWizardTemplate = document.querySelector('#similar-wizard-template').content.querySelector('.setup-similar-item');
 
+  var renderWizard = function(wizard){
+    var wizardElement = similarWizardTemplate.cloneNode(true);
 
-function getRandomInt(max) {
-  return Math.floor(Math.random() * Math.floor(max));
-}
+    wizardElement.querySelector('.setup-similar-label').textContent = wizard.name;
+    wizardElement.querySelector('.wizard-coat').style.fill = wizard.colorCoat;
+    wizardElement.querySelector('.wizard-eyes').style.fill = wizard.colorEyes;
 
-var NAMES = ['Иван', 'Хуан Себастьян', 'Мария', 'Кристоф', 'Виктор', 'Юлия', 'Люпита', 'Вашингтон'];
-var SURNAMES = ['да Марья', 'Верон', 'Мирабелла', 'Вальц', 'Онопко', 'Топольницкая', 'Нионго', 'Ирвинг'];
-var COAT_COLORS = ['rgb(101, 137, 164)', 'rgb(241, 43, 107)', 'rgb(146, 100, 161)', 'rgb(56, 159, 117)', 'rgb(215, 210, 55)', 'rgb(0, 0, 0)'];
-var EYES_COLORS = ['black', 'red', 'blue', 'yellow', 'green'];
-var FIREBALL_COLORS = ['#ee4830', '#30a8ee', '#5ce6c0', '#e848d5', '#e6e848'];
-
-var wizards = [];
-for (var i = 0; i < 4; i++) {
-  wizards[i] = {
-    name: NAMES[getRandomInt(NAMES.length)] + ' ' + SURNAMES[getRandomInt(SURNAMES.length)],
-    coatColor: COAT_COLORS[getRandomInt(COAT_COLORS.length)],
-    eyesColor: EYES_COLORS[getRandomInt(EYES_COLORS.length)]
+    return wizardElement;
   }
-};
 
-var renderWizard = function(wizard){
-  var wizardElement = similarWizardTemplate.cloneNode(true);
+  var successHandler = function(wizards){
+    var fragment = document.createDocumentFragment();
 
-  wizardElement.querySelector('.setup-similar-label').textContent = wizard.name;
-  wizardElement.querySelector('.wizard-coat').style.fill = wizard.coatColor;
-  wizardElement.querySelector('.wizard-eyes').style.fill = wizard.eyesColor;
+    for (var i = 0; i < 4; i++) {
+      fragment.appendChild(renderWizard(wizards[i]));
+    }
+    similarListElement.appendChild(fragment);
 
-  return wizardElement;
-}
+    setup.querySelector('.setup-similar').classList.remove('hidden');
+  };
 
-var fragment = document.createDocumentFragment();
-for (var i = 0; i < 4; i++) {
-  fragment.appendChild(renderWizard(wizards[i]))
-};
-similarListElement.appendChild(fragment);
+  var errorHandler = function(errorMessage){
+    var node = document.createElement('div');
+    node.style = 'z-index: 100; margin: 0 auto; text-align: center; backgroundColor: red;';
+    node.style.position = 'absolute';
+    node.style.left = 0;
+    node.style.right = 0;
+    node.style.fontsize = '30px';
 
-setup.querySelector('.setup-similar').classList.remove('hidden');
+    node.textContent = errorMessage;
+    document.body.insertAdjacentElement('afterbegin', node);
+  };
+
+  window.load(successHandler, errorHandler);
+
+  var form = setup.querySelector('.setup-wizard-form');
+  form.addEventListener('submit', function(evt){
+    window.upload(new FormData(form), function(response){
+      setup.classList.add('hidden');
+    });
+    evt.preventDefault();
+  });
+})();
 
 //
 // Кастомизация персонажа
 //
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+};
+
+var COAT_COLORS = ['rgb(101, 137, 164)', 'rgb(241, 43, 107)', 'rgb(146, 100, 161)', 'rgb(56, 159, 117)', 'rgb(215, 210, 55)', 'rgb(0, 0, 0)'];
+var EYES_COLORS = ['black', 'red', 'blue', 'yellow', 'green'];
+var FIREBALL_COLORS = ['#ee4830', '#30a8ee', '#5ce6c0', '#e848d5', '#e6e848'];
 
 var wizardCoat = document.querySelector('.setup-wizard .wizard-coat');
 
@@ -133,6 +148,7 @@ wizardFireball.addEventListener('click', function(){
 //
 // Перетаскивание окна
 //
+
 (function(){
 
   var setupDialogElement = document.querySelector('.setup');
