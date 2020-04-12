@@ -1,108 +1,68 @@
 'use strict';
 
-//
-// Открытие и закрытие окна выбора и настройки персонажа
-//
+// Функция настройки открытия и закрытия окна setup настройки персонажа.
+// И функция перетаскивания окна.
 
 var setup = document.querySelector('.setup');
 
-var setupOpen = document.querySelector('.setup-open');
+(function(){
 
-var setupClose = document.querySelector('.setup-close');
+  var setupOpen = document.querySelector('.setup-open');
 
-var setupUserName = document.querySelector('.setup-user-name');
+  var setupClose = document.querySelector('.setup-close');
 
-var openPopup = function(){
-  setup.classList.remove('hidden');
-  document.addEventListener('keydown', onPopupEscPress);
-};
+  var setupUserName = document.querySelector('.setup-user-name');
 
-var closePopup = function(){
-  setup.classList.add('hidden');
-  document.removeEventListener('keydown', onPopupEscPress);
-};
+  // Функции открытия и закрытия окна.
 
-var onPopupEscPress = function(evt){
-  if (evt.keyCode === 27) {
-    closePopup();
-  }
-};
+  var openPopup = function(){
+    setup.classList.remove('hidden');
+    document.addEventListener('keydown', onPopupEscPress);
+  };
 
-setupUserName.addEventListener('focus', function(){
-  document.removeEventListener('keydown', onPopupEscPress);
-});
+  var closePopup = function(){
+    setup.classList.add('hidden');
+    document.removeEventListener('keydown', onPopupEscPress);
+  };
 
-setupOpen.addEventListener('click', function(){
-  openPopup();
-});
+  // Закрытие окна при нажатии ESC.
 
-setupOpen.addEventListener('keydown', function(evt){
-  if (evt.keyCode === 13) {
-    openPopup();
-  }
-});
-
-setupClose.addEventListener('click', function(){
-  closePopup();
-});
-
-setupClose.addEventListener('keydown', function(evt){
-  if (evt.keyCode === 13) {
-    closePopup();
-  }
-});
-
-//
-// Запрос на сервер и получение созданных игроков
-//
-
-(function () {
-  var similarListElement = document.querySelector('.setup-similar-list');
-
-  var similarWizardTemplate = document.querySelector('#similar-wizard-template').content.querySelector('.setup-similar-item');
-
-  var renderWizard = function(wizard){
-    var wizardElement = similarWizardTemplate.cloneNode(true);
-
-    wizardElement.querySelector('.setup-similar-label').textContent = wizard.name;
-    wizardElement.querySelector('.wizard-coat').style.fill = wizard.colorCoat;
-    wizardElement.querySelector('.wizard-eyes').style.fill = wizard.colorEyes;
-
-    return wizardElement;
-  }
-
-  var successHandler = function(wizards){
-    var fragment = document.createDocumentFragment();
-
-    for (var i = 0; i < 4; i++) {
-      fragment.appendChild(renderWizard(wizards[i]));
+  var onPopupEscPress = function(evt){
+    if (evt.keyCode === 27) {
+      closePopup();
     }
-    similarListElement.appendChild(fragment);
-
-    setup.querySelector('.setup-similar').classList.remove('hidden');
   };
 
-  var errorHandler = function(errorMessage){
-    var node = document.createElement('div');
-    node.style = 'z-index: 100; margin: 0 auto; text-align: center; backgroundColor: red;';
-    node.style.position = 'absolute';
-    node.style.left = 0;
-    node.style.right = 0;
-    node.style.fontsize = '30px';
+  // Отключение ESC, когда поле ввода имени в фокусе
 
-    node.textContent = errorMessage;
-    document.body.insertAdjacentElement('afterbegin', node);
-  };
-
-  window.load(successHandler, errorHandler);
-
-  var form = setup.querySelector('.setup-wizard-form');
-  form.addEventListener('submit', function(evt){
-    window.upload(new FormData(form), function(response){
-      setup.classList.add('hidden');
-    });
-    evt.preventDefault();
+  setupUserName.addEventListener('focus', function(){
+    document.removeEventListener('keydown', onPopupEscPress);
   });
+
+  // Открытие окна при щелчке на иконке пользователя или нажатии Enter на иконке пользователя в состоянии фокуса.
+
+  setupOpen.addEventListener('click', function(){
+    openPopup();
+  });
+
+  setupOpen.addEventListener('keydown', function(evt){
+    if (evt.keyCode === 13) {
+      openPopup();
+    }
+  });
+
+  // Закрытие окна при щелке на крестик или нажатии Enter, когда крестик в фокусе
+
+  setupClose.addEventListener('click', function(){
+    closePopup();
+  });
+
+  setupClose.addEventListener('keydown', function(evt){
+    if (evt.keyCode === 13) {
+      closePopup();
+    }
+  });
+
 })();
 
 //
@@ -131,18 +91,21 @@ wizardCoat.addEventListener('click', function(){
   var wizardCoatColor = COAT_COLORS[getRandomInt(COAT_COLORS.length)];
   wizardCoat.style.fill = wizardCoatColor;
   document.querySelector('input[name="coat-color"]').value = wizardCoatColor;
+  window.wizard.onCoatChange(wizardCoatColor);
 });
 
 wizardEyes.addEventListener('click', function(){
   var wizardEyesColor = EYES_COLORS[getRandomInt(EYES_COLORS.length)];
   wizardEyes.style.fill = wizardEyesColor;
   document.querySelector('input[name="eyes-color"]').value = wizardEyesColor;
+  window.wizard.onEyesChange(wizardEyesColor);
 });
 
 wizardFireball.addEventListener('click', function(){
   var wizardFireballColor = FIREBALL_COLORS[getRandomInt(FIREBALL_COLORS.length)];
   wizardFireball.style.backgroundColor = wizardFireballColor;
   document.querySelector('input[name="fireball-color"]').value = wizardFireballColor;
+  window.wizard.onFireballChange(wizardFireballColor);
 });
 
 //
