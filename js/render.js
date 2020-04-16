@@ -19,50 +19,12 @@
     return wizardElement;
   }
 
-  var coatColor;
-  var eyesColor;
-  var fireballColor;
-  var wizards = [];
-
-  var getRank = function(wizard){
-    var rank = 0;
-
-    if(wizard.colorCoat === coatColor){
-      rank +=2;
-    }
-    if(wizard.colorEyes === eyesColor){
-      rank +=1;
-    }
-    if(wizard.colorFireball ===fireballColor){
-      rank +=1;
-    }
-
-    return rank;
-  }
-
-  var namesComparator = function(left, right){
-    if (left > right){
-      return 1;
-    } else if (left < right) {
-      return -1;
-    } else {
-      return 0;
-    }
-  }
-
   var fragment = document.createDocumentFragment();
 
-  var updateWizards = function () {
+  window.render = function(wizards){
+    var takeNumber = wizards.length > 4 ? 4 : wizards.length;
     similarListElement.innerHTML = '';
-    renderWizard(wizards.sort(function(left, right){
-      var rankDiff = getRank(right) - getRank(left);
-      if (rankDiff === 0) {
-        rankDiff = namesComparator(left.name, right.name);
-      }
-      return rankDiff;
-    }));
-
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < takeNumber; i++) {
       fragment.appendChild(renderWizard(wizards[i]));
     }
     similarListElement.appendChild(fragment);
@@ -70,62 +32,29 @@
     setup.querySelector('.setup-similar').classList.remove('hidden');
   }
 
-  var lastTimeout;
-
-  window.wizard.onEyesChange = function(color){
-    eyesColor = color;
-    if (lastTimeout) {
-      window.clearTimeout(lastTimeout);
-    }
-    lastTimeout = window.setTimeout(function () {
-      updateWizards();
-    }, 300);
-  }
-
-  window.wizard.onCoatChange = function(color){
-    coatColor = color;
-    if (lastTimeout) {
-      window.clearTimeout(lastTimeout);
-    }
-    lastTimeout = window.setTimeout(function () {
-      updateWizards();
-    }, 300);
-  }
-
-  window.wizard.onFireballChange = function(color){
-    fireballColor = color;
-    if (lastTimeout) {
-      window.clearTimeout(lastTimeout);
-    }
-    lastTimeout = window.setTimeout(function () {
-      updateWizards();
-    }, 300);
-  }
-
-  var successHandler = function(data){
-    wizards = data;
-    updateWizards();
-  };
-
-  var errorHandler = function(errorMessage){
-    var node = document.createElement('div');
-    node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: red;';
-    node.style.position = 'absolute';
-    node.style.left = 0;
-    node.style.right = 0;
-    node.style.fontSize = '30px';
-
-    node.textContent = errorMessage;
-    document.body.insertAdjacentElement('afterbegin', node);
-  };
-
-  window.load(successHandler, errorHandler);
+  //
+  // Сохранение данных из формы
+  //
 
   var form = document.querySelector('.setup-wizard-form');
   form.addEventListener('submit', function(evt){
+    evt.preventDefault();
+    var wizardCopy = document.querySelector('svg').cloneNode(true);
+
+    wizardCopy.querySelector('#wizard-coat').style.fill = myWizard.coatColor;
+    wizardCopy.querySelector('#wizard-eyes').style.fill = myWizard.eyesColor;
+
+    var wizardBase64Right = window.svg2base64(wizardCopy);
+
+    wizardCopy.querySelector('#wizard').setAttribute('transform', 'translate(62, 0) scale(-1,1 )');
+
+    var wizardBase64Left = window.svg2base64(wizardCopy);
+
+    window.restartGame(wizardBase64Right, wizardBase64Left);
+
     window.upload(new FormData(form), function(response){
       setup.classList.add('hidden');
     });
-    evt.preventDefault();
   });
+
 })();
